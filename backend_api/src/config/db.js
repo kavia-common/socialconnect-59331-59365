@@ -2,6 +2,7 @@
 
 const mongoose = require('mongoose');
 const config = require('./index');
+const models = require('../models');
 
 /**
  * Connect to MongoDB using Mongoose.
@@ -32,6 +33,23 @@ async function connectDB() {
 }
 
 /**
+ * Ensure indexes for all registered models.
+ * Explicitly calls createIndexes() (alias ensureIndexes) to build declared schema indexes.
+ */
+async function ensureAllIndexes() {
+  const modelEntries = Object.entries(models);
+  for (const [name, model] of modelEntries) {
+    try {
+      // createIndexes builds declared indexes without dropping existing ones
+      await model.createIndexes();
+      console.log(`Indexes ensured for model: ${name}`);
+    } catch (err) {
+      console.error(`Failed to ensure indexes for model ${name}:`, err.message);
+    }
+  }
+}
+
+/**
  * Disconnect from MongoDB.
  */
 async function disconnectDB() {
@@ -40,12 +58,14 @@ async function disconnectDB() {
 
 /**
  * PUBLIC_INTERFACE
- * Initialize database connection (idempotent).
+ * Initialize database connection (idempotent) and ensure indexes are created.
  */
 async function initDatabase() {
-  /** Initialize Mongoose connection. */
-  if (mongoose.connection.readyState === 1) return;
-  await connectDB();
+  /** Initialize Mongoose connection and enforce indexes. */
+  if (mongoose.connection.readyState !== 1) {
+    await connectDB();
+  }
+  await ensureAllIndexes();
 }
 
 module.exports = {

@@ -18,4 +18,8 @@ const FollowSchema = new Schema(
 // Ensure a user cannot follow the same user more than once
 FollowSchema.index({ follower: 1, following: 1 }, { unique: true });
 
+// Optimize follower/following list queries by recency
+FollowSchema.index({ following: 1, createdAt: -1 });
+FollowSchema.index({ follower: 1, createdAt: -1 });
+
 module.exports = mongoose.model('Follow', FollowSchema);

@@ -8,6 +8,7 @@ const notificationService = require('./services/notification');
 
 (async () => {
   // Initialize DB before starting server
+  // initDatabase establishes connection and ensures all schema indexes are created/enforced
   await initDatabase();
 
   const server = http.createServer(app);
