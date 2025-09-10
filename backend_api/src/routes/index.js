@@ -7,6 +7,7 @@ const usersRoutes = require('./users');
 const postsRoutes = require('./posts');
 const followsRoutes = require('./follows');
 const notificationsRoutes = require('./notifications');
+const mediaRoutes = require('./media');
 
 const router = express.Router();
 // Health endpoint
@@ -59,5 +60,6 @@ router.use('/users', usersRoutes);
 router.use('/posts', postsRoutes);
 router.use('/follows', followsRoutes);
 router.use('/notifications', notificationsRoutes);
+router.use('/media', mediaRoutes);
 
 module.exports = router;

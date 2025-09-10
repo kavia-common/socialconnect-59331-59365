@@ -16,6 +16,7 @@ New Feature Routes:
 - Follows: POST /follows/:username, DELETE /follows/:username, GET /follows/:username/followers, GET /follows/:username/following
 - Posts: POST /posts, DELETE /posts/:id, GET /posts/:id, GET /posts/by/:username, GET /posts/feed/me, GET /posts/explore, GET /posts/search?q=, POST /posts/:id/comments
 - Notifications: GET /notifications, POST /notifications/:id/read
+- Media: POST /media/signature (JWT required), POST /media/upload (multipart, JWT required)
 
 Socket.IO Notifications:
 - Client should connect with auth token (JWT):
@@ -27,3 +28,14 @@ Socket.IO Notifications:
 - Server also emits 'connection:ack' upon successful connection with { ok: true, userId }.
 
 Environment variables (see project root README for details) must be set in backend_api/.env.
+
+Cloudinary configuration (required for media):
+- CLOUDINARY_CLOUD_NAME
+- CLOUDINARY_API_KEY
+- CLOUDINARY_API_SECRET
+
+Media endpoints:
+- POST /media/signature
+  Use to obtain a signature for client-side uploads to Cloudinary. Body may include folder, public_id, tags, resource_type (image|video|auto), eager.
+- POST /media/upload
+  Server-side upload. Send multipart/form-data with fields: file (binary), folder?, public_id?, resource_type?, tags?
