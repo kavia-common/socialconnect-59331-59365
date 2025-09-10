@@ -11,7 +11,23 @@ const router = express.Router();
  * @swagger
  * /follows/{username}:
  *   post:
+ *     tags: [Follows]
  *     summary: Follow a user
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/UsernameParam'
+ *     responses:
+ *       201:
+ *         description: Now following
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/FollowActionResponse'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
  */
 router.post(
   '/:username',
@@ -24,7 +40,27 @@ router.post(
  * @swagger
  * /follows/{username}:
  *   delete:
+ *     tags: [Follows]
  *     summary: Unfollow a user
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/UsernameParam'
+ *     responses:
+ *       200:
+ *         description: Unfollowed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
  */
 router.delete(
   '/:username',
@@ -37,7 +73,22 @@ router.delete(
  * @swagger
  * /follows/{username}/followers:
  *   get:
+ *     tags: [Follows]
  *     summary: List followers of a user
+ *     parameters:
+ *       - $ref: '#/components/parameters/UsernameParam'
+ *       - $ref: '#/components/parameters/LimitQuery'
+ *     responses:
+ *       200:
+ *         description: Followers list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
  */
 router.get(
   '/:username/followers',
@@ -53,7 +104,22 @@ router.get(
  * @swagger
  * /follows/{username}/following:
  *   get:
+ *     tags: [Follows]
  *     summary: List following of a user
+ *     parameters:
+ *       - $ref: '#/components/parameters/UsernameParam'
+ *       - $ref: '#/components/parameters/LimitQuery'
+ *     responses:
+ *       200:
+ *         description: Following list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
  */
 router.get(
   '/:username/following',

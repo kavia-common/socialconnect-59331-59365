@@ -11,7 +11,24 @@ const router = express.Router();
  * @swagger
  * /notifications:
  *   get:
+ *     tags: [Notifications]
  *     summary: List notifications
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/OnlyUnreadQuery'
+ *       - $ref: '#/components/parameters/LimitQuery'
+ *     responses:
+ *       200:
+ *         description: Notifications
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Notification'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  */
 router.get(
   '/',
@@ -27,7 +44,23 @@ router.get(
  * @swagger
  * /notifications/{id}/read:
  *   post:
+ *     tags: [Notifications]
  *     summary: Mark notification as read
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/NotificationIdParam'
+ *     responses:
+ *       200:
+ *         description: Updated notification
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Notification'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
  */
 router.post(
   '/:id/read',

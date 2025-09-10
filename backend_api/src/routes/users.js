@@ -11,7 +11,22 @@ const router = express.Router();
  * @swagger
  * /users/search:
  *   get:
+ *     tags: [Users]
  *     summary: Search users
+ *     parameters:
+ *       - $ref: '#/components/parameters/SearchQuery'
+ *       - $ref: '#/components/parameters/LimitQuery'
+ *     responses:
+ *       200:
+ *         description: Users found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
  */
 router.get(
   '/search',
@@ -27,7 +42,19 @@ router.get(
  * @swagger
  * /users/{username}:
  *   get:
+ *     tags: [Users]
  *     summary: Get user profile
+ *     parameters:
+ *       - $ref: '#/components/parameters/UsernameParam'
+ *     responses:
+ *       200:
+ *         description: Public profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PublicProfile'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
  */
 router.get(
   '/:username',
@@ -40,7 +67,27 @@ router.get(
  * @swagger
  * /users/me/profile:
  *   put:
+ *     tags: [Users]
  *     summary: Update my profile
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateProfileRequest'
+ *     responses:
+ *       200:
+ *         description: Updated profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  */
 router.put(
   '/me/profile',

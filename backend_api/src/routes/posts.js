@@ -11,7 +11,27 @@ const router = express.Router();
  * @swagger
  * /posts:
  *   post:
+ *     tags: [Posts]
  *     summary: Create post
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreatePostRequest'
+ *     responses:
+ *       201:
+ *         description: Post created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Post'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  */
 router.post(
   '/',
@@ -35,7 +55,27 @@ router.post(
  * @swagger
  * /posts/{id}:
  *   delete:
+ *     tags: [Posts]
  *     summary: Delete my post
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/PostIdParam'
+ *     responses:
+ *       200:
+ *         description: Delete result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
  */
 router.delete(
   '/:id',
@@ -48,7 +88,19 @@ router.delete(
  * @swagger
  * /posts/{id}:
  *   get:
+ *     tags: [Posts]
  *     summary: Get post by id
+ *     parameters:
+ *       - $ref: '#/components/parameters/PostIdParam'
+ *     responses:
+ *       200:
+ *         description: Post
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Post'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
  */
 router.get(
   '/:id',
@@ -61,7 +113,22 @@ router.get(
  * @swagger
  * /posts/by/{username}:
  *   get:
+ *     tags: [Posts]
  *     summary: List posts by username
+ *     parameters:
+ *       - $ref: '#/components/parameters/UsernameParam'
+ *       - $ref: '#/components/parameters/LimitQuery'
+ *     responses:
+ *       200:
+ *         description: Posts by user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Post'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
  */
 router.get(
   '/by/:username',
@@ -77,7 +144,23 @@ router.get(
  * @swagger
  * /posts/feed/me:
  *   get:
+ *     tags: [Posts]
  *     summary: My feed
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/LimitQuery'
+ *     responses:
+ *       200:
+ *         description: Feed posts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Post'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  */
 router.get(
   '/feed/me',
@@ -90,7 +173,19 @@ router.get(
  * @swagger
  * /posts/explore:
  *   get:
+ *     tags: [Posts]
  *     summary: Explore posts
+ *     parameters:
+ *       - $ref: '#/components/parameters/LimitQuery'
+ *     responses:
+ *       200:
+ *         description: Public posts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Post'
  */
 router.get(
   '/explore',
@@ -103,7 +198,22 @@ router.get(
  * @swagger
  * /posts/search:
  *   get:
+ *     tags: [Posts]
  *     summary: Search posts
+ *     parameters:
+ *       - $ref: '#/components/parameters/SearchQuery'
+ *       - $ref: '#/components/parameters/LimitQuery'
+ *     responses:
+ *       200:
+ *         description: Search results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Post'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
  */
 router.get(
   '/search',
@@ -119,7 +229,31 @@ router.get(
  * @swagger
  * /posts/{id}/comments:
  *   post:
+ *     tags: [Posts]
  *     summary: Comment on a post
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/PostIdParam'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AddCommentRequest'
+ *     responses:
+ *       201:
+ *         description: Comment created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Comment'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
  */
 router.post(
   '/:id/comments',
@@ -136,11 +270,43 @@ router.post(
  * @swagger
  * /posts/{id}/like:
  *   post:
+ *     tags: [Posts]
  *     summary: Like a post
  *     description: Likes the specified post. Idempotent; multiple calls will not increase likeCount beyond one per user.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/PostIdParam'
+ *     responses:
+ *       201:
+ *         description: Like applied
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LikeResponse'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
  *   delete:
+ *     tags: [Posts]
  *     summary: Unlike a post
  *     description: Removes the user's like from the post. Idempotent; if not liked, it is a no-op.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/PostIdParam'
+ *     responses:
+ *       200:
+ *         description: Unlike result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnlikeResponse'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
  */
 router.post(
   '/:id/like',

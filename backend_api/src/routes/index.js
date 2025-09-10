@@ -16,27 +16,16 @@ const router = express.Router();
  * @swagger
  * /:
  *   get:
+ *     tags: [Health]
  *     summary: Health endpoint
+ *     description: Returns service health information.
  *     responses:
  *       200:
  *         description: Service health check passed
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: ok
- *                 message:
- *                   type: string
- *                   example: Service is healthy
- *                 timestamp:
- *                   type: string
- *                   format: date-time
- *                 environment:
- *                   type: string
- *                   example: development
+ *               $ref: '#/components/schemas/HealthResponse'
  */
 router.get('/', healthController.check.bind(healthController));
 
@@ -44,11 +33,26 @@ router.get('/', healthController.check.bind(healthController));
  * @swagger
  * /auth/ping:
  *   get:
+ *     tags: [Auth]
  *     summary: Authenticated ping
  *     description: Returns a simple payload if JWT is valid.
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Auth OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *                 user:
+ *                   type: object
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  */
 router.get('/auth/ping', auth(true), (req, res) => {
   return res.json({ ok: true, user: req.user });

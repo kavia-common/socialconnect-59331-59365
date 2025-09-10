@@ -11,8 +11,26 @@ const router = express.Router();
  * @swagger
  * /auth/signup:
  *   post:
+ *     tags: [Auth]
  *     summary: User signup
  *     description: Create a new user account.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/SignupRequest'
+ *     responses:
+ *       201:
+ *         description: User created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthTokenUser'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       409:
+ *         description: User with email/username already exists
  */
 router.post(
   '/signup',
@@ -28,8 +46,26 @@ router.post(
  * @swagger
  * /auth/login:
  *   post:
+ *     tags: [Auth]
  *     summary: User login
  *     description: Login with email or username and password.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LoginRequest'
+ *     responses:
+ *       200:
+ *         description: Auth OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthTokenUser'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  */
 router.post(
   '/login',
@@ -44,8 +80,20 @@ router.post(
  * @swagger
  * /auth/me:
  *   get:
+ *     tags: [Auth]
  *     summary: Current user
  *     description: Returns the current user profile for a valid JWT.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  */
 router.get('/me', auth(true), controller.me.bind(controller));
 
@@ -53,8 +101,24 @@ router.get('/me', auth(true), controller.me.bind(controller));
  * @swagger
  * /auth/logout:
  *   post:
+ *     tags: [Auth]
  *     summary: Logout
  *     description: Stateless logout - client should discard the token.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout acknowledged
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  */
 router.post('/logout', auth(true), controller.logout.bind(controller));
 

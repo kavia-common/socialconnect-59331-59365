@@ -16,54 +16,27 @@ const upload = multer({
  * @swagger
  * /media/signature:
  *   post:
- *     summary: Get signed Cloudinary upload payload
- *     description: Returns a signature and parameters for direct client-side upload to Cloudinary.
  *     tags:
  *       - Media
+ *     summary: Get signed Cloudinary upload payload
+ *     description: Returns a signature and parameters for direct client-side upload to Cloudinary.
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: false
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               folder:
- *                 type: string
- *                 description: Optional Cloudinary folder path
- *               timestamp:
- *                 type: integer
- *                 description: Unix timestamp (seconds). Defaults to now.
- *               public_id:
- *                 type: string
- *                 description: Optional public id for the asset
- *               tags:
- *                 type: string
- *                 description: Comma-separated tags
- *               resource_type:
- *                 type: string
- *                 enum: [image, video, auto]
- *                 description: Resource type (default auto)
- *               eager:
- *                 type: string
- *                 description: Eager transformation string
+ *             $ref: '#/components/schemas/MediaSignatureRequest'
  *     responses:
  *       200:
  *         description: Signed payload and public Cloudinary info
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 cloudName:
- *                   type: string
- *                 apiKey:
- *                   type: string
- *                 timestamp:
- *                   type: integer
- *                 signature:
- *                   type: string
- *                 payload:
- *                   type: object
+ *               $ref: '#/components/schemas/MediaSignatureResponse'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  */
 router.post(
   '/signature',
@@ -83,10 +56,12 @@ router.post(
  * @swagger
  * /media/upload:
  *   post:
- *     summary: Server-side upload to Cloudinary
- *     description: Accepts multipart/form-data with media file and uploads to Cloudinary on the server-side.
  *     tags:
  *       - Media
+ *     summary: Server-side upload to Cloudinary
+ *     description: Accepts multipart/form-data with media file and uploads to Cloudinary on the server-side.
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -113,28 +88,11 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 url:
- *                   type: string
- *                 secureUrl:
- *                   type: string
- *                 publicId:
- *                   type: string
- *                 resourceType:
- *                   type: string
- *                 type:
- *                   type: string
- *                 width:
- *                   type: integer
- *                 height:
- *                   type: integer
- *                 duration:
- *                   type: number
- *                 bytes:
- *                   type: integer
- *                 format:
- *                   type: string
+ *               $ref: '#/components/schemas/MediaUploadResponse'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  */
 router.post(
   '/upload',
