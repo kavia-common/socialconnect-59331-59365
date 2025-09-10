@@ -2,6 +2,14 @@
 
 This backend is an Express server connected to MongoDB via Mongoose, with JWT authentication middleware scaffolding and Socket.IO for real-time features.
 
+Testing
+- Unit/Integration tests are written with Jest + Supertest.
+- MongoDB is mocked via mongodb-memory-server; no external DB required.
+- Cloudinary uploads are mocked at fetch layer in tests.
+Run:
+  npm install
+  npm test
+
 Key components:
 - Express app with JSON body parsing and CORS configured via env.
 - Mongoose connection using MONGODB_URI and MONGODB_DB.
