@@ -22,30 +22,56 @@ const notificationService = require('./services/notification');
     },
   });
 
+  // Socket authentication middleware:
+  // Verifies JWT provided via handshake.auth.token or Authorization header or query token.
+  io.use((socket, next) => {
+    try {
+      const headerToken =
+        (socket.handshake.headers['authorization'] || '').split(' ')[1] || null;
+      const token =
+        socket.handshake.auth?.token ||
+        headerToken ||
+        socket.handshake.query?.token;
+
+      if (!token) {
+        const err = new Error('Authentication token missing');
+        err.data = { code: 'AUTH_MISSING' };
+        return next(err);
+      }
+      if (!config.jwtSecret) {
+        const err = new Error('Server misconfiguration');
+        err.data = { code: 'SERVER_CONFIG' };
+        return next(err);
+      }
+      const payload = jwt.verify(token, config.jwtSecret);
+      socket.data.user = {
+        id: String(payload.sub),
+        username: payload.username,
+        email: payload.email,
+      };
+      return next();
+    } catch (e) {
+      const err = new Error('Invalid token');
+      err.data = { code: 'AUTH_INVALID' };
+      return next(err);
+    }
+  });
+
   // Initialize notification service with io
   notificationService.init(io);
 
   // PUBLIC_INTERFACE
   io.on('connection', (socket) => {
     /** Handle new socket connections. Attach basic listeners. */
-    console.log('Socket connected:', socket.id);
+    const userId = socket.data?.user?.id;
+    console.log('Socket connected:', socket.id, 'user:', userId || 'anon');
 
-    // Try to authenticate socket via token query or auth header for per-user room
-    const token =
-      socket.handshake.auth?.token ||
-      (socket.handshake.headers['authorization'] || '').split(' ')[1] ||
-      socket.handshake.query?.token;
-
-    if (token && config.jwtSecret) {
-      try {
-        const payload = jwt.verify(token, config.jwtSecret);
-        // Join a room named by user id to deliver notifications
-        socket.join(String(payload.sub));
-        socket.data.user = { id: String(payload.sub), username: payload.username };
-        console.log(`Socket ${socket.id} joined room for user ${payload.sub}`);
-      } catch (e) {
-        console.warn('Socket auth failed:', e.message);
-      }
+    // Join per-user room when authenticated
+    if (userId) {
+      socket.join(String(userId));
+      console.log(`Socket ${socket.id} joined room for user ${userId}`);
+      // Optional: send initial handshake/ack
+      socket.emit('connection:ack', { ok: true, userId });
     }
 
     socket.on('disconnect', (reason) => {

@@ -5,16 +5,28 @@ const { Notification } = require('../models');
 let ioInstance = null;
 
 /**
+ * PUBLIC_INTERFACE
  * Initialize the notification service with a Socket.IO server reference.
- * This will be set from server.js through app locals.
+ * This allows emitting real-time events to user-specific rooms.
+ * @param {import('socket.io').Server} io - The Socket.IO server instance
  */
-// PUBLIC_INTERFACE
 function init(io) {
   /** Cache Socket.IO instance to emit notifications. */
   ioInstance = io;
 }
 
-// PUBLIC_INTERFACE
+/**
+ * PUBLIC_INTERFACE
+ * Create a notification and emit it to the recipient's Socket.IO room.
+ * @param {Object} params
+ * @param {string} params.user - Recipient user id
+ * @param {string} params.actor - Actor user id
+ * @param {'like'|'comment'|'follow'} params.type - Notification type
+ * @param {string|null} [params.post] - Related post id
+ * @param {string|null} [params.comment] - Related comment id
+ * @param {Object} [params.metadata] - Arbitrary metadata
+ * @returns {Promise<Object>} The created notification document
+ */
 async function notify({ user, actor, type, post = null, comment = null, metadata = {} }) {
   /** Create notification and emit to user's room if socket available. */
   const notification = await Notification.create({
@@ -34,13 +46,20 @@ async function notify({ user, actor, type, post = null, comment = null, metadata
       post: post ? String(post) : null,
       comment: comment ? String(comment) : null,
       createdAt: notification.createdAt,
+      isRead: false,
       metadata,
     });
   }
   return notification;
 }
 
-// PUBLIC_INTERFACE
+/**
+ * PUBLIC_INTERFACE
+ * List notifications for the given user, optionally only unread.
+ * @param {string} userId - The user id
+ * @param {{onlyUnread?: boolean, limit?: number}} [opts]
+ * @returns {Promise<Array>} Array of notifications
+ */
 async function list(userId, { onlyUnread = false, limit = 20 } = {}) {
   /** List notifications for the user. */
   const filter = { user: userId };
@@ -52,7 +71,13 @@ async function list(userId, { onlyUnread = false, limit = 20 } = {}) {
     .populate('actor', '-passwordHash');
 }
 
-// PUBLIC_INTERFACE
+/**
+ * PUBLIC_INTERFACE
+ * Mark a single notification as read.
+ * @param {string} userId - The user id
+ * @param {string} notificationId - The notification id
+ * @returns {Promise<Object>} Updated notification
+ */
 async function markRead(userId, notificationId) {
   /** Mark a notification as read. */
   const result = await Notification.findOneAndUpdate(

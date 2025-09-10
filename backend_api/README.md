@@ -18,9 +18,12 @@ New Feature Routes:
 - Notifications: GET /notifications, POST /notifications/:id/read
 
 Socket.IO Notifications:
-- Client should connect with auth token:
+- Client should connect with auth token (JWT):
   const socket = io(API_URL, { auth: { token: jwt } });
-- Server joins the user to a room named by user id when token is valid.
-- New notifications are emitted as 'notification:new' to the user's room.
+  // Alternatively, send header: { extraHeaders: { Authorization: `Bearer ${jwt}` } }
+- On successful auth, the server joins the socket to a room named by the user's id.
+- New notifications are emitted as 'notification:new' to the user's room with payload:
+  { id, type: 'like'|'comment'|'follow', actor, post, comment, createdAt, isRead, metadata }
+- Server also emits 'connection:ack' upon successful connection with { ok: true, userId }.
 
 Environment variables (see project root README for details) must be set in backend_api/.env.
