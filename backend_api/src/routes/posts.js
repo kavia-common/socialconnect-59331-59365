@@ -70,4 +70,17 @@ router.get('/search', auth(false), controller.search.bind(controller));
  */
 router.post('/:id/comments', auth(true), controller.comment.bind(controller));
 
+/**
+ * @swagger
+ * /posts/{id}/like:
+ *   post:
+ *     summary: Like a post
+ *     description: Likes the specified post. Idempotent; multiple calls will not increase likeCount beyond one per user.
+ *   delete:
+ *     summary: Unlike a post
+ *     description: Removes the user's like from the post. Idempotent; if not liked, it is a no-op.
+ */
+router.post('/:id/like', auth(true), controller.like.bind(controller));
+router.delete('/:id/like', auth(true), controller.unlike.bind(controller));
+
 module.exports = router;

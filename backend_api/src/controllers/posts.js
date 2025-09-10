@@ -110,6 +110,45 @@ class PostsController {
       next(err);
     }
   }
+
+  // PUBLIC_INTERFACE
+  async like(req, res, next) {
+    /** Like a post by :id; emits 'like' notification to post owner (not self). */
+    try {
+      const result = await postService.likePost(req.user.sub, req.params.id);
+
+      // fetch post to get author for notification
+      const post = await postService.getPostById(req.params.id);
+      if (post && String(post.author._id) !== String(req.user.sub)) {
+        // Only notify when we actually created a like (avoid duplicate notification on alreadyLiked)
+        if (!result.alreadyLiked) {
+          await notificationService.notify({
+            user: post.author._id,
+            actor: req.user.sub,
+            type: 'like',
+            post: post._id,
+            comment: null,
+            metadata: {},
+          });
+        }
+      }
+
+      res.status(201).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // PUBLIC_INTERFACE
+  async unlike(req, res, next) {
+    /** Unlike a post by :id; no notification on unlike. */
+    try {
+      const result = await postService.unlikePost(req.user.sub, req.params.id);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = new PostsController();

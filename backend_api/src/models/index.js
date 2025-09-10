@@ -10,4 +10,5 @@ module.exports = {
   Comment: require('./Comment'),
   Notification: require('./Notification'),
   Follow: require('./Follow'),
+  Like: require('./Like'),
 };

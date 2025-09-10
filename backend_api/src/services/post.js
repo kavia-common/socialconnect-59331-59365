@@ -1,6 +1,6 @@
 'use strict';
 
-const { Post, Comment, User, Follow } = require('../models');
+const { Post, Comment, User, Follow, Like } = require('../models');
 
 // PUBLIC_INTERFACE
 async function createPost(authorId, { caption, hashtags, media }) {
@@ -116,6 +116,52 @@ async function addComment(userId, postId, text, parentComment = null) {
   return comment.populate('author', '-passwordHash');
 }
 
+/**
+ * PUBLIC_INTERFACE
+ * Like a post: creates a Like if not existing and increments likeCount atomically.
+ * Idempotent: if already liked, no-op and returns { ok: true, liked: true }.
+ */
+async function likePost(userId, postId) {
+  // ensure post exists
+  const post = await Post.findById(postId).select('_id');
+  if (!post) {
+    const err = new Error('Post not found');
+    err.status = 404;
+    throw err;
+  }
+  // Try create like (upsert-like semantics with unique index)
+  try {
+    await Like.create({ user: userId, post: post._id });
+    await Post.updateOne({ _id: post._id }, { $inc: { likeCount: 1 } });
+    return { ok: true, liked: true };
+  } catch (e) {
+    // Duplicate key error -> already liked, treat as idempotent success
+    if (e && e.code === 11000) {
+      return { ok: true, liked: true, alreadyLiked: true };
+    }
+    throw e;
+  }
+}
+
+/**
+ * PUBLIC_INTERFACE
+ * Unlike a post: removes Like if exists and decrements likeCount atomically.
+ * Idempotent: if not liked, no-op and returns { ok: true, liked: false }.
+ */
+async function unlikePost(userId, postId) {
+  const post = await Post.findById(postId).select('_id');
+  if (!post) {
+    const err = new Error('Post not found');
+    err.status = 404;
+    throw err;
+  }
+  const res = await Like.deleteOne({ user: userId, post: post._id });
+  if (res.deletedCount > 0) {
+    await Post.updateOne({ _id: post._id, likeCount: { $gt: 0 } }, { $inc: { likeCount: -1 } });
+  }
+  return { ok: true, liked: false, removed: res.deletedCount > 0 };
+}
+
 module.exports = {
   createPost,
   deletePost,
@@ -125,4 +171,6 @@ module.exports = {
   explorePublic,
   searchPosts,
   addComment,
+  likePost,
+  unlikePost,
 };
