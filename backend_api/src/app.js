@@ -1,55 +1,65 @@
 const cors = require('cors');
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const routes = require('./routes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('../swagger');
+const config = require('./config');
 
 // Initialize express app
 const app = express();
 
+// CORS
+const corsOrigins = config.cors.origins.length ? config.cors.origins : ['*'];
 app.use(cors({
-  origin: '*',
+  origin: (origin, cb) => {
+    if (!origin || corsOrigins.includes('*') || corsOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error('Not allowed by CORS'));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 }));
 app.set('trust proxy', true);
-app.use('/docs', swaggerUi.serve, (req, res, next) => {
-  const host = req.get('host');           // may or may not include port
-  let protocol = req.protocol;          // http or https
 
+// Swagger docs with dynamic server
+app.use('/docs', swaggerUi.serve, (req, res, next) => {
+  const host = req.get('host');
+  let protocol = req.secure ? 'https' : req.protocol;
   const actualPort = req.socket.localPort;
   const hasPort = host.includes(':');
-  
+
   const needsPort =
     !hasPort &&
     ((protocol === 'http' && actualPort !== 80) ||
-     (protocol === 'https' && actualPort !== 443));
+      (protocol === 'https' && actualPort !== 443));
+
   const fullHost = needsPort ? `${host}:${actualPort}` : host;
-  protocol = req.secure ? 'https' : protocol;
 
   const dynamicSpec = {
     ...swaggerSpec,
-    servers: [
-      {
-        url: `${protocol}://${fullHost}`,
-      },
-    ],
+    servers: [{ url: `${protocol}://${fullHost}` }],
   };
   swaggerUi.setup(dynamicSpec)(req, res, next);
 });
 
-// Parse JSON request body
-app.use(express.json());
+// Body parsers
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Mount routes
 app.use('/', routes);
 
-// Error handling middleware
+/**
+ * Global error handling middleware.
+ */
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({
+  const status = err.status || 500;
+  res.status(status).json({
     status: 'error',
-    message: 'Internal Server Error',
+    message: err.message || 'Internal Server Error',
   });
 });
 

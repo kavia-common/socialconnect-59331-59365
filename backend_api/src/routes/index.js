@@ -1,5 +1,6 @@
 const express = require('express');
 const healthController = require('../controllers/health');
+const { auth } = require('../middleware');
 
 const router = express.Router();
 // Health endpoint
@@ -31,5 +32,19 @@ const router = express.Router();
  *                   example: development
  */
 router.get('/', healthController.check.bind(healthController));
+
+/**
+ * @swagger
+ * /auth/ping:
+ *   get:
+ *     summary: Authenticated ping
+ *     description: Returns a simple payload if JWT is valid.
+ *     responses:
+ *       200:
+ *         description: Auth OK
+ */
+router.get('/auth/ping', auth(true), (req, res) => {
+  return res.json({ ok: true, user: req.user });
+});
 
 module.exports = router;
