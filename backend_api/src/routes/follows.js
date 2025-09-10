@@ -1,8 +1,9 @@
 'use strict';
 
 const express = require('express');
-const { auth } = require('../middleware');
+const { auth, validate } = require('../middleware');
 const controller = require('../controllers/follows');
+const { param, query } = require('express-validator');
 
 const router = express.Router();
 
@@ -12,7 +13,12 @@ const router = express.Router();
  *   post:
  *     summary: Follow a user
  */
-router.post('/:username', auth(true), controller.follow.bind(controller));
+router.post(
+  '/:username',
+  auth(true),
+  validate([param('username').isString().trim().isLength({ min: 3, max: 30 })]),
+  controller.follow.bind(controller)
+);
 
 /**
  * @swagger
@@ -20,7 +26,12 @@ router.post('/:username', auth(true), controller.follow.bind(controller));
  *   delete:
  *     summary: Unfollow a user
  */
-router.delete('/:username', auth(true), controller.unfollow.bind(controller));
+router.delete(
+  '/:username',
+  auth(true),
+  validate([param('username').isString().trim().isLength({ min: 3, max: 30 })]),
+  controller.unfollow.bind(controller)
+);
 
 /**
  * @swagger
@@ -28,7 +39,15 @@ router.delete('/:username', auth(true), controller.unfollow.bind(controller));
  *   get:
  *     summary: List followers of a user
  */
-router.get('/:username/followers', auth(false), controller.followers.bind(controller));
+router.get(
+  '/:username/followers',
+  auth(false),
+  validate([
+    param('username').isString().trim().isLength({ min: 3, max: 30 }),
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
+  ]),
+  controller.followers.bind(controller)
+);
 
 /**
  * @swagger
@@ -36,6 +55,14 @@ router.get('/:username/followers', auth(false), controller.followers.bind(contro
  *   get:
  *     summary: List following of a user
  */
-router.get('/:username/following', auth(false), controller.following.bind(controller));
+router.get(
+  '/:username/following',
+  auth(false),
+  validate([
+    param('username').isString().trim().isLength({ min: 3, max: 30 }),
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
+  ]),
+  controller.following.bind(controller)
+);
 
 module.exports = router;

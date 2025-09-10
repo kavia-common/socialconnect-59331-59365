@@ -1,8 +1,9 @@
 'use strict';
 
 const express = require('express');
-const { auth } = require('../middleware');
+const { auth, validate } = require('../middleware');
 const controller = require('../controllers/users');
+const { query, param, body } = require('express-validator');
 
 const router = express.Router();
 
@@ -12,7 +13,15 @@ const router = express.Router();
  *   get:
  *     summary: Search users
  */
-router.get('/search', auth(false), controller.search.bind(controller));
+router.get(
+  '/search',
+  auth(false),
+  validate([
+    query('q').isString().trim().isLength({ min: 1 }).withMessage('q required'),
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
+  ]),
+  controller.search.bind(controller)
+);
 
 /**
  * @swagger
@@ -20,7 +29,12 @@ router.get('/search', auth(false), controller.search.bind(controller));
  *   get:
  *     summary: Get user profile
  */
-router.get('/:username', auth(false), controller.getProfile.bind(controller));
+router.get(
+  '/:username',
+  auth(false),
+  validate([param('username').isString().trim().isLength({ min: 3, max: 30 })]),
+  controller.getProfile.bind(controller)
+);
 
 /**
  * @swagger
@@ -28,6 +42,15 @@ router.get('/:username', auth(false), controller.getProfile.bind(controller));
  *   put:
  *     summary: Update my profile
  */
-router.put('/me/profile', auth(true), controller.updateProfile.bind(controller));
+router.put(
+  '/me/profile',
+  auth(true),
+  validate([
+    body('bio').optional().isString().isLength({ max: 1600 }),
+    body('avatarUrl').optional().isString().isURL({ require_protocol: true }),
+    body('username').optional().isString().trim().isLength({ min: 3, max: 30 }),
+  ]),
+  controller.updateProfile.bind(controller)
+);
 
 module.exports = router;

@@ -2,8 +2,9 @@
 
 const express = require('express');
 const multer = require('multer');
-const { auth } = require('../middleware');
+const { auth, validate } = require('../middleware');
 const controller = require('../controllers/media');
+const { body } = require('express-validator');
 
 const router = express.Router();
 const upload = multer({
@@ -64,7 +65,19 @@ const upload = multer({
  *                 payload:
  *                   type: object
  */
-router.post('/signature', auth(true), controller.getSignedPayload.bind(controller));
+router.post(
+  '/signature',
+  auth(true),
+  validate([
+    body('folder').optional().isString().isLength({ max: 200 }),
+    body('timestamp').optional().isInt({ min: 0 }).toInt(),
+    body('public_id').optional().isString().isLength({ max: 200 }),
+    body('tags').optional().isString().isLength({ max: 500 }),
+    body('resource_type').optional().isIn(['image', 'video', 'auto']),
+    body('eager').optional().isString().isLength({ max: 500 }),
+  ]),
+  controller.getSignedPayload.bind(controller)
+);
 
 /**
  * @swagger
@@ -123,6 +136,17 @@ router.post('/signature', auth(true), controller.getSignedPayload.bind(controlle
  *                 format:
  *                   type: string
  */
-router.post('/upload', auth(true), upload.single('file'), controller.uploadServer.bind(controller));
+router.post(
+  '/upload',
+  auth(true),
+  upload.single('file'),
+  validate([
+    body('folder').optional().isString().isLength({ max: 200 }),
+    body('public_id').optional().isString().isLength({ max: 200 }),
+    body('resource_type').optional().isIn(['image', 'video', 'auto']),
+    body('tags').optional().isString().isLength({ max: 500 }),
+  ]),
+  controller.uploadServer.bind(controller)
+);
 
 module.exports = router;

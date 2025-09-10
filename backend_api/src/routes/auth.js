@@ -2,7 +2,8 @@
 
 const express = require('express');
 const controller = require('../controllers/auth');
-const { auth } = require('../middleware');
+const { auth, validate } = require('../middleware');
+const { body } = require('express-validator');
 
 const router = express.Router();
 
@@ -13,7 +14,15 @@ const router = express.Router();
  *     summary: User signup
  *     description: Create a new user account.
  */
-router.post('/signup', controller.signup.bind(controller));
+router.post(
+  '/signup',
+  validate([
+    body('username').isString().trim().isLength({ min: 3, max: 30 }).withMessage('username 3-30 chars'),
+    body('email').isString().trim().isEmail().withMessage('valid email required'),
+    body('password').isString().isLength({ min: 8, max: 128 }).withMessage('password 8-128 chars'),
+  ]),
+  controller.signup.bind(controller)
+);
 
 /**
  * @swagger
@@ -22,7 +31,14 @@ router.post('/signup', controller.signup.bind(controller));
  *     summary: User login
  *     description: Login with email or username and password.
  */
-router.post('/login', controller.login.bind(controller));
+router.post(
+  '/login',
+  validate([
+    body('emailOrUsername').isString().trim().isLength({ min: 1 }).withMessage('emailOrUsername required'),
+    body('password').isString().isLength({ min: 8, max: 128 }).withMessage('password 8-128 chars'),
+  ]),
+  controller.login.bind(controller)
+);
 
 /**
  * @swagger
